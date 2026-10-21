@@ -9,7 +9,6 @@
       "yazılım",
       "kodlama",
       "bilgisayar",
-      "developer",
       "stack overflow"
     ],
     "sub": {
@@ -230,6 +229,12 @@
         "sahne",
         "musical"
       ],
+      "Belgesel": [
+        "belgesel",
+        "documentary",
+        "dokumental",
+        "dokumenter"
+      ],
       "Müzik & Konserler": [
         "müzik",
         "konser",
@@ -331,17 +336,27 @@
           ]
         }
       },
-      "Gezi & Coğrafya": [
-        "gezi",
-        "seyahat",
-        "travel",
-        "tourist",
-        "wanderlust",
-        "citywalk",
-        "geographicaljourneys",
-        "city tour",
-        "thripy.com"
-      ],
+      "Gezi & Coğrafya": {
+        "keywords": [
+          "gezi",
+          "seyahat",
+          "travel",
+          "tourist",
+          "wanderlust",
+          "citywalk",
+          "geographicaljourneys",
+          "city tour",
+          "thripy.com"
+        ],
+        "sub": {
+          "YouTube Gezi Kanalları": [
+            "youtube.com/channel",
+            "youtube.com/@",
+            "youtube.com/c/",
+            "youtube.com/user/"
+          ]
+        }
+      },
       "Yemek Tarifleri": [
         "yemek",
         "tarif",

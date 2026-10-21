@@ -24,6 +24,7 @@ wheels/
 venv/
 env/
 ENV/
+.venv/
 
 # IDE
 .vscode/
@@ -38,10 +39,19 @@ ENV/
 *.backup
 *.backup_*
 
+# Secrets and local state (API anahtarlari, cache)
+.ai_config.json
+.ai_cache.json
+.env
+.env.*
+
 # Test files (optional - you might want to keep these)
 test_bookmarks.html
 bookmarks.html
 bookmarks_organized.html
+bookmarks_organized.md
+link_report.txt
+unmatched_report.txt
 
 # OS
 .DS_Store

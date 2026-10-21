@@ -1,0 +1,97 @@
+"""Yer imi kategorilerinin dahili (varsayılan) tanımları.
+
+Bu sözlük **tek gömülü otorite**dir: `categories_config.json` yalnızca
+kullanıcı tarafından bilerek geçersiz kılındığında (`--config`) yüklenir.
+Program hiçbir koşulda bu dosyayı otomatik olarak üzerine yazmaz.
+
+Şema:
+    "Kategori": ["anahtar kelime", ...]                       -> yaprak kategori
+    "Kategori": {"keywords": [...], "sub": {...}}              -> ara düğüm
+    "sub" içindeki her değer aynı şemayı izler.
+"""
+
+CATEGORIES = {
+    "Teknoloji & Yazılım": {
+        "keywords": ["tech", "developer", "code", "software", "programming", "yazılım", "kodlama", "bilgisayar", "stack overflow"],
+        "sub": {
+            "Yapay Zeka & Makine Öğrenmesi": {
+                "keywords": ["ai", "artificial intelligence", "ml", "machine learning", "deep learning", "tensorflow", "pytorch", "huggingface", "openai", "gemini", "claude", "deepseek", "llm", "agent-zero", "prompt", "yapay zeka", "agentic"],
+                "sub": {
+                    "AI Araçları & Platformlar": ["uizard.io", "lovo.ai", "postcheetah", "tryleap.ai", "compose.ai", "schrodi.co", "rows.com", "10web-site.ai", "fliki.ai", "creativeblogtopic", "midjourney", "firefly.adobe", "bluewillow.ai", "chatpdf", "livepolls.app", "replicate.com", "ai21.com", "rtrvr.ai", "codegpt.co", "codeium", "poe.com", "anthropic"],
+                    "AI Eğitim & Dokümantasyon": ["huggingface.co/docs", "huggingface.co/learn", "deeplearning.ai", "prompting", "google.dev/gemini-api"]
+                }
+            },
+            "Python": ["python", "django", "flask", "pandas", "numpy", "py", "yazbel.com"],
+            "Web Geliştirme": {
+                "keywords": ["web", "frontend", "backend", "css", "html", "javascript", "react", "vue", "angular", "node.js", "next.js", "tailwind", "bootstrap"],
+                "sub": {
+                    "Frontend": ["frontend", "css", "html", "react", "vue", "angular", "tailwind", "bootstrap", "htmldog", "css-tricks"],
+                    "Backend": ["backend", "node.js", "nestjs", "spring boot", "api", "server", "firebase", "supabase"],
+                    "Web Dev Araçları": ["layoutit", "bootswatch", "bootsnipp", "jsfiddle", "gradienty.codes", "userway.org"]
+                }
+            },
+            "Güvenlik & Hacking": {
+                "keywords": ["hack", "security", "cybersecurity", "pentest", "comptia", "siber güvenlik", "exploit-db", "overthewire"],
+                "sub": {
+                    "CompTIA Sertifikaları": ["comptia"],
+                    "Hacking Eğitimleri": ["hack", "pentest", "kali linux", "nmap"],
+                }
+            },
+            "Veri Bilimi & Analiz": ["data", "analytics", "sql", "database", "kaggle", "datacamp", "veri"],
+            "Eğitim Platformları & Kaynaklar": ["udemy", "coursera", "freecodecamp", "edx", "patika.dev", "btkakademi", "cs50", "w3schools", "tutorial", "learn", "course", "eğitim", "khanacademy", "theodinproject"],
+            "Araçlar & IDEs": ["github", "git", "replit", "codepen", "codesandbox", "vscode", "visual studio", "jetbrains", "docker", "linux", "rapidapi", "postman", "ide", "sublime", "brackets", "idx.google"],
+        }
+    },
+    "Film, Dizi & Sanat": {
+        "keywords": ["film", "dizi", "movie", "series", "tv", "eğlence", "entertainment", "seyret", "sanat", "art"],
+        "sub": {
+            "Film & Dizi Platformları": ["netflix", "blutv", "dizilla", "hdfilmcehennemi", "filmizle", "imdb", "justwatch", "dizibox", "diziroll", "roketdizi", "sinema.cx", "sinema.vip", "tvplus", "kultfilmler"],
+            "Tiyatro, Opera & Bale": ["tiyatro", "opera", "bale", "sahne", "musical"],
+            "Belgesel": ["belgesel", "documentary", "dokumental", "dokumenter"],
+            "Müzik & Konserler": ["müzik", "konser", "concert", "spotify", "youtube.com/watch", "soundcloud"],
+            "Müzeler & Galeriler": ["museum", "muze", "gallery", "sanat", "artsandculture.google", "louvre", "metmuseum", "britishmuseum"],
+        }
+    },
+    "Kültür & Yaşam": {
+        "keywords": ["kültür", "kişisel gelişim", "felsefe", "tasavvuf", "kitap", "okuma", "blog", "dergi", "yaşam"],
+        "sub": {
+            "Haber, Blog & Makale": ["feedly", "news", "gazete", "dunya.com", "hbrturkiye", "medium", "dev.to", "hackernoon", "uplifers", "resmigazete", "indieblog", "neocities", "lemmyverse", "thenewstack"],
+            "Bilim & Akademi": ["evrimagaci", "scholar.google", "academia.edu", "bilim", "science", "acikders.ankara.edu.tr", "nationalacademies"],
+            "Felsefe & Tasavvuf": ["felsefe", "tasavvuf", "anadoluaydinlanma", "isam", "tevhiddersleri", "stoacı", "sufi", "mevlana", "yunus emre", "risaleoku", "islamveihsan"],
+            "Kitaplar & Kütüphaneler": {
+                "keywords": ["book", "kütüphane", "library", "gutenberg", "archive.org", "libgen", "pdfdrive", "goodreads", "kitap", "yazmaeserler", "openculture", "wikibooks"],
+                "sub": {
+                    "Sesli Kitaplar": ["sesli kitap", "audiobook", "librivox"],
+                    "Akademik Arşivler": ["devletarsivleri", "makhtota", "yazmaeserler.diyanet", "isam.org.tr", "mkutup.gov.tr"]
+                }
+            },
+            "Gezi & Coğrafya": {
+                "keywords": ["gezi", "seyahat", "travel", "tourist", "wanderlust", "citywalk", "geographicaljourneys", "city tour", "thripy.com"],
+                "sub": {
+                    "YouTube Gezi Kanalları": ["youtube.com/channel", "youtube.com/@", "youtube.com/c/", "youtube.com/user/"]
+                }
+            },
+            "Yemek Tarifleri": ["yemek", "tarif", "recipe", "lezzet", "nefisyemektarifleri"],
+        }
+    },
+    "Sosyal Medya & Forumlar": ["facebook", "twitter", "x.com", "pinterest", "reddit", "linkedin", "discord", "forum"],
+    "İndirme & Torrent": ["torrent", "download", "warez", "pirate", "libgen.is", "rarbg", "1337x"],
+    "Diğer": [],
+    "Bozuk & Kontrol Edilecek": ["javascript:", "about:blank"]
+}
+
+
+# Aktif yapılandırma. `set_categories` ile değiştirildiğinde tüm modüller
+# `get_categories()` çağrısıyla güncel hali görür (import anında kopya kalmaz).
+CURRENT = CATEGORIES
+
+
+def get_categories() -> dict:
+    """Aktif kategori yapılandırmasını döndürür."""
+    return CURRENT
+
+
+def set_categories(categories_def: dict) -> None:
+    """Aktif kategori yapılandırmasını değiştirir."""
+    global CURRENT
+    CURRENT = categories_def

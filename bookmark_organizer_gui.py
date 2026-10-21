@@ -1,9 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
-import json
 import os
-from bookmark_organizer import categorize_link, add_to_structure, create_html_from_structure, CATEGORIES
+
+from bookmark_organizer import (
+    categorize_items,
+    create_html_from_structure,
+    extract_items,
+    load_categories_config,
+)
+from categories import get_categories
 from bs4 import BeautifulSoup, Doctype
 
 class BookmarkOrganizerGUI:
@@ -15,6 +21,7 @@ class BookmarkOrganizerGUI:
         # Variables
         self.input_file = tk.StringVar()
         self.output_file = tk.StringVar()
+        self.config_file = tk.StringVar()
         self.progress_var = tk.DoubleVar()
         self.status_var = tk.StringVar(value="Hazır")
         
@@ -33,41 +40,51 @@ class BookmarkOrganizerGUI:
         ttk.Label(main_frame, text="Çıkış Dosyası:").grid(row=1, column=0, sticky=tk.W, pady=5)
         ttk.Entry(main_frame, textvariable=self.output_file, width=50).grid(row=1, column=1, padx=5)
         ttk.Button(main_frame, text="Seç", command=self.select_output_file).grid(row=1, column=2)
-        
+
+        ttk.Label(main_frame, text="Yapılandırma:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Entry(main_frame, textvariable=self.config_file, width=50).grid(row=2, column=1, padx=5)
+        ttk.Button(main_frame, text="Seç", command=self.select_config_file).grid(row=2, column=2)
+
         # Options frame
         options_frame = ttk.LabelFrame(main_frame, text="Seçenekler", padding="10")
-        options_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
-        
+        options_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
+
         self.backup_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(options_frame, text="Orijinal dosyayı yedekle", variable=self.backup_var).grid(row=0, column=0, sticky=tk.W)
-        
+
         self.open_result_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(options_frame, text="Sonucu tarayıcıda aç", variable=self.open_result_var).grid(row=1, column=0, sticky=tk.W)
-        
+
+        self.markdown_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(options_frame, text="Markdown formatında çıktı üret", variable=self.markdown_var).grid(row=2, column=0, sticky=tk.W)
+
+        self.check_links_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(options_frame, text="Linklerin canlılık kontrolünü yap", variable=self.check_links_var).grid(row=3, column=0, sticky=tk.W)
+
         # Process button
         self.process_btn = ttk.Button(main_frame, text="Organize Et", command=self.start_processing)
-        self.process_btn.grid(row=3, column=0, columnspan=3, pady=20)
-        
+        self.process_btn.grid(row=4, column=0, columnspan=3, pady=20)
+
         # Progress bar
         self.progress_bar = ttk.Progressbar(main_frame, variable=self.progress_var, maximum=100)
-        self.progress_bar.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
-        
+        self.progress_bar.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+
         # Status label
-        ttk.Label(main_frame, textvariable=self.status_var).grid(row=5, column=0, columnspan=3, pady=5)
-        
+        ttk.Label(main_frame, textvariable=self.status_var).grid(row=6, column=0, columnspan=3, pady=5)
+
         # Results text area
         self.results_text = tk.Text(main_frame, height=15, width=80)
-        self.results_text.grid(row=6, column=0, columnspan=3, pady=10)
-        
+        self.results_text.grid(row=7, column=0, columnspan=3, pady=10)
+
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=self.results_text.yview)
-        scrollbar.grid(row=6, column=3, sticky=(tk.N, tk.S))
+        scrollbar.grid(row=7, column=3, sticky=(tk.N, tk.S))
         self.results_text.configure(yscrollcommand=scrollbar.set)
-        
+
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(6, weight=1)
+        main_frame.rowconfigure(7, weight=1)
     
     def select_input_file(self):
         filename = filedialog.askopenfilename(
@@ -89,6 +106,14 @@ class BookmarkOrganizerGUI:
         )
         if filename:
             self.output_file.set(filename)
+
+    def select_config_file(self):
+        filename = filedialog.askopenfilename(
+            title="Kategori yapılandırma dosyası (JSON)",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
+            self.config_file.set(filename)
     
     def start_processing(self):
         if not self.input_file.get():
@@ -112,53 +137,38 @@ class BookmarkOrganizerGUI:
         try:
             self.update_status("Dosya okunuyor...")
             self.update_progress(10)
-            
+
+            # Optional category configuration (explicit path only)
+            config_path = self.config_file.get().strip()
+            if config_path:
+                if load_categories_config(os.path.abspath(config_path)):
+                    self.log_result(f"Yapılandırma yüklendi: {config_path}")
+                else:
+                    self.log_result("Yapılandırma yüklenemedi, dahili kurallar kullanılıyor.")
+
             # Backup if requested
             if self.backup_var.get():
                 backup_file = self.input_file.get() + ".backup"
                 import shutil
                 shutil.copy2(self.input_file.get(), backup_file)
                 self.log_result(f"Yedek oluşturuldu: {backup_file}")
-            
+
             # Read input file
             with open(self.input_file.get(), 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
             self.update_status("HTML parse ediliyor...")
             self.update_progress(20)
-            
-            soup = BeautifulSoup(content, 'html.parser')
-            organized_structure = {}
-            
-            all_links = soup.find_all('a')
-            total_links = len(all_links)
+
+            items = extract_items(content)
+            total_links = len(items)
             self.log_result(f"Toplam {total_links} link bulundu")
-            
+
             self.update_status("Linkler kategorilere ayrılıyor...")
-            
-            # Process links with progress updates
-            for i, link in enumerate(all_links):
-                title = link.text.strip()
-                url = link.get('href', '')
-                if not title and not url:
-                    continue
-                
-                add_date = link.get('add_date', '')
-                icon = link.get('icon', '')
-                item = {'type': 'link', 'title': title, 'url': url, 'add_date': add_date, 'icon': icon}
-                
-                path = categorize_link(title, url, CATEGORIES)
-                if path:
-                    add_to_structure(organized_structure, path, item)
-                else:
-                    add_to_structure(organized_structure, ["Diğer"], item)
-                
-                # Update progress
-                progress = 20 + (i / total_links) * 60
-                self.update_progress(progress)
-            
-            self.update_status("HTML oluşturuluyor...")
+
+            organized_structure, unmatched = categorize_items(items, get_categories())
             self.update_progress(85)
+            self.log_result(f"Eşleşmeyen link: {len(unmatched)}")
             
             # Create new HTML
             new_soup = BeautifulSoup("", 'html.parser')
@@ -182,18 +192,45 @@ class BookmarkOrganizerGUI:
             self.update_status("Dosya kaydediliyor...")
             self.update_progress(95)
             
-            # Save file
             with open(self.output_file.get(), 'w', encoding='utf-8') as f:
                 f.write(new_soup.prettify())
+            
+            if self.markdown_var.get():
+                try:
+                    from converter import convert_to_markdown
+                    md_output = os.path.splitext(self.output_file.get())[0] + '.md'
+                    convert_to_markdown(self.input_file.get(), md_output)
+                    self.log_result(f"\nMarkdown dosyası oluşturuldu: {md_output}")
+                except ImportError:
+                    self.log_result("\nconverter modülü bulunamadı!")
+                except Exception as e:
+                    self.log_result(f"\nMarkdown dönüştürme hatası: {e}")
             
             self.update_progress(100)
             self.update_status("Tamamlandı!")
             
-            # Show statistics
             stats = self.calculate_stats(organized_structure)
             self.show_statistics(stats)
             
-            # Open result if requested
+            if self.check_links_var.get():
+                self.update_status("Linkler kontrol ediliyor...")
+                self.log_result("\n=== DEAD LINK CHECKER ===")
+                try:
+                    from link_checker import check_links
+                    report = check_links(self.input_file.get())
+                    self.log_result(f"Toplam: {report['total']}")
+                    self.log_result(f"Aktif: {report['alive']}")
+                    self.log_result(f"Ölü: {len(report['dead'])}")
+                    self.log_result(f"Yönlendirme: {len(report['redirected'])}")
+                    if report['dead']:
+                        self.log_result("\n--- ÖLÜ LİNKLAR ---")
+                        for r in report['dead']:
+                            self.log_result(f"[{r['status']}] {r['url']}")
+                except ImportError:
+                    self.log_result("link_checker modülü bulunamadı!")
+                except Exception as e:
+                    self.log_result(f"Link kontrol hatası: {e}")
+            
             if self.open_result_var.get():
                 import webbrowser
                 webbrowser.open(f"file://{os.path.abspath(self.output_file.get())}")
@@ -243,7 +280,7 @@ class BookmarkOrganizerGUI:
 
 def main():
     root = tk.Tk()
-    app = BookmarkOrganizerGUI(root)
+    root.app = BookmarkOrganizerGUI(root)
     root.mainloop()
 
 if __name__ == '__main__':
