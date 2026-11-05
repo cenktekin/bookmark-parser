@@ -23,7 +23,8 @@ Yer imlerinizi düzenlemek hiç bu kadar kolay olmamıştı! Bu Python uygulamas
   * **🌐 HTML Çıkışı:** Standart HTML formatında dışa aktarım
   * **📝 Markdown Export:** Düzenlenen yer imlerini Markdown formatında dışa aktarın
   * **🔗 Dead Link Checker:** Linklerin hala aktif olup olmadığını kontrol edin (TLS doğrulaması varsayılan olarak açıktır)
-  * **🤖 AI Kategorizasyon (POC):** Gemini API ile yapay zeka destekli kategorizasyon
+  * **🤖 AI Kategorizasyon:** Merkezi LLM gateway üzerinden yapay zeka destekli kategorizasyon (GUI'de onay kutusu)
+  * **📚 Kaynak Kütüphanesi Export:** Kategori + metadata'yı `blog-generator` şemasıyla JSON/CSV olarak dışa aktarır
   * **✅ Test & CI:** Sıfır ek bağımlılıkla `unittest` testleri ve GitHub Actions kapısı
 
 ## Nasıl Çalışır? ⚙️
@@ -41,10 +42,8 @@ Anahtar kelimeler **kelime sınırı** ile eşleştirilir: `ai` kelimesi yalnız
     ```bash
     pip install -r requirements.txt
     ```
-    AI kategorizasyonu için ayrıca:
-    ```bash
-    pip install -r requirements-ai.txt
-    ```
+    AI kategorizasyonu ek paket gerektirmez; model ve anahtar merkezi LLM
+    gateway'den gelir (bkz. aşağıdaki AI bölümü).
 3.  **Betiği İndirin:** Bu depoyu klonlayın veya `bookmark_organizer.py` dosyasını indirin.
 
 -----
@@ -127,19 +126,36 @@ python bookmark_organizer.py --config my_categories.json
 python converter.py bookmarks.html out.md --config my_categories.json
 ```
 
-### 🤖 AI Kategorizasyon (POC)
+### 📚 Kaynak Kütüphanesi Export
 
-Gemini API ile yapay zeka destekli kategorizasyon için:
+Kategori ve metadata'yı `blog-generator` "Kaynak Kütüphanesi" şemasıyla
+dışa aktarır (`{kategori, alt_kategori, baslik, url, eklenme_tarihi}`):
 
 ```bash
-export GEMINI_API_KEY=<your-gemini-api-key>
+python bookmark_organizer.py --export-library kutuphane.json
+python bookmark_organizer.py --export-library kutuphane.csv
+```
+
+Format dosya uzantısından seçilir; JSON UTF-8, CSV Excel uyumlu (BOM) yazılır.
+
+### 🤖 AI Kategorizasyon
+
+AI kategorizasyonu **merkezi LLM gateway** üzerinden çalışır; projede sağlayıcı
+SDK'sı veya API anahtarı tutulmaz. Önce gateway'i başlatın:
+
+```bash
+node D:\projects\shared\llm\llm.mjs serve
+```
+
+Sonra CLI veya GUI ile kullanın:
+
+```bash
 python ai_categorizer.py bookmarks.html --output categorized.json
+python ai_categorizer.py --check          # gateway erişimi + proje bilgisi
 ```
 
-**Not:** AI kategorizasyon için `google-generativeai` kütüphanesi gereklidir:
-```bash
-pip install -r requirements-ai.txt
-```
+GUI'de **"AI ile kategorize et (merkezi LLM gateway)"** onay kutusunu işaretlemek
+yeterlidir. Gateway erişilemezse otomatik olarak anahtar kelime kurallarına düşer.
 
 ### ✅ Testler
 
@@ -197,7 +213,8 @@ Organizing your bookmarks has never been easier\! This Python script reads your 
   * **Markdown Export:** Export organized bookmarks in Markdown format for documentation or Git repos.
   * **Dead Link Checker:** Verify if your bookmarked URLs are still alive (TLS verification is on by default).
   * **Unmatched Link Report:** `--report-unmatched` lists every link no rule matched — the practical way to grow your rule set.
-  * **AI Categorization (POC):** Use Google Gemini for intelligent, AI-powered categorization.
+  * **AI Categorization:** Optional AI-powered categorization through the central LLM gateway (checkbox in the GUI).
+  * **Source Library Export:** Exports category + metadata in the `blog-generator` schema as JSON/CSV.
   * **Tests & CI:** Zero extra dependencies — `unittest` suite plus a GitHub Actions gate.
 
 ## How It Works ⚙️
@@ -215,10 +232,8 @@ Keywords are matched on **word boundaries**: `ai` matches "AI" or "Yapay Zeka" a
     ```bash
     pip install -r requirements.txt
     ```
-    For AI categorization as well:
-    ```bash
-    pip install -r requirements-ai.txt
-    ```
+    AI categorization needs no extra package — the model and key come from the
+    central LLM gateway (see the AI section below).
 3.  **Download the Script:** Clone this repository or download the `bookmark_organizer.py` file.
 
 -----
@@ -277,19 +292,36 @@ python bookmark_organizer.py --export-config my_categories.json
 python bookmark_organizer.py --config my_categories.json
 ```
 
-### AI Categorization (POC)
+### Source Library Export
 
-To use Gemini AI for intelligent categorization:
+Export category and metadata in the `blog-generator` "Source Library" schema
+(`{kategori, alt_kategori, baslik, url, eklenme_tarihi}`):
 
 ```bash
-export GEMINI_API_KEY=<your-gemini-api-key>
+python bookmark_organizer.py --export-library library.json
+python bookmark_organizer.py --export-library library.csv
+```
+
+Format is chosen by extension; JSON is UTF-8, CSV is Excel-friendly (BOM).
+
+### AI Categorization
+
+AI categorization runs through the **central LLM gateway**; no provider SDK or
+API key is stored in this project. Start the gateway first:
+
+```bash
+node D:\projects\shared\llm\llm.mjs serve
+```
+
+Then use the CLI or the GUI:
+
+```bash
 python ai_categorizer.py bookmarks.html --output categorized.json
+python ai_categorizer.py --check          # gateway reachability + project info
 ```
 
-**Note:** AI categorization requires the `google-generativeai` package:
-```bash
-pip install -r requirements-ai.txt
-```
+In the GUI just tick **"AI ile kategorize et (merkezi LLM gateway)"**. If the
+gateway is unreachable it falls back to the keyword rules automatically.
 
 ### Tests
 

@@ -252,6 +252,12 @@
         "louvre",
         "metmuseum",
         "britishmuseum"
+      ],
+      "Video Platformları": [
+        "youtube.com",
+        "vimeo.com",
+        "dailymotion",
+        "twitch.tv"
       ]
     }
   },
@@ -272,6 +278,7 @@
         "feedly",
         "news",
         "gazete",
+        "reuters",
         "dunya.com",
         "hbrturkiye",
         "medium",

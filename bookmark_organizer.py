@@ -410,6 +410,8 @@ def _build_parser() -> argparse.ArgumentParser:
                         help='Kullanılacak kategori yapılandırma JSON dosyası')
     parser.add_argument('--export-config', default=None, metavar='DOSYA',
                         help='Dahili kategori kurallarını JSON dosyasına yazar')
+    parser.add_argument('--export-library', default=None, metavar='DOSYA',
+                        help='Yer imlerini Kaynak Kütüphanesi olarak JSON/CSV yazar')
     parser.add_argument('--report-unmatched', nargs='?', const='unmatched_report.txt',
                         metavar='DOSYA',
                         help='Eşleşmeyen yer imlerini raporlar')
@@ -425,6 +427,19 @@ def cli() -> int:
     if args.export_config:
         target = os.path.abspath(args.export_config)
         return 0 if save_categories_config(target) else 1
+
+    if args.export_library:
+        import library_export
+        try:
+            count = library_export.export_library(
+                os.path.abspath(args.input or DEFAULT_INPUT),
+                os.path.abspath(args.export_library),
+            )
+        except (OSError, ValueError) as exc:
+            logger.error("Kaynak Kütüphanesi yazılamadı: %s", exc)
+            return 1
+        print(f"Kaynak Kütüphanesi: {count} kayıt -> {args.export_library}")
+        return 0
 
     if args.config:
         if not load_categories_config(os.path.abspath(args.config)):

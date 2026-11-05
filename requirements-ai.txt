@@ -1,2 +1,4 @@
+# AI kategorizasyonu ek Python bagimliligi gerektirmez.
+# Model ve API anahtari merkezi LLM gateway'den gelir (D:\projects\shared\llm).
+# Bu dosya geriye donuk uyumluluk icin korunmustur.
 -r requirements.txt
-google-generativeai>=0.3.0

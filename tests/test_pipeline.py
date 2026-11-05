@@ -144,5 +144,26 @@ class RunDoesNotOverwriteConfigTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(out_path))
 
 
+class RulePoolTests(unittest.TestCase):
+    """F1 raporundaki eslesmeyen linklerden eklenen kurallarin regresyonu."""
+
+    def test_reuters_maps_to_news(self):
+        path = bookmark_organizer.categorize_link(
+            "Reuters", "https://www.reuters.com/", get_categories())
+        self.assertEqual(path, ["Kültür & Yaşam", "Haber, Blog & Makale"])
+
+    def test_youtube_root_maps_to_video_platforms(self):
+        path = bookmark_organizer.categorize_link(
+            "YouTube", "https://www.youtube.com/", get_categories())
+        self.assertEqual(path, ["Film, Dizi & Sanat", "Video Platformları"])
+
+    def test_list_category_paths_covers_hierarchy(self):
+        from categories import list_category_paths
+
+        paths = list_category_paths()
+        self.assertIn("Kültür & Yaşam > Haber, Blog & Makale", paths)
+        self.assertIn("Diğer", paths)
+
+
 if __name__ == "__main__":
     unittest.main()

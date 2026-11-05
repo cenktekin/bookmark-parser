@@ -61,6 +61,9 @@ class BookmarkOrganizerGUI:
         self.check_links_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(options_frame, text="Linklerin canlılık kontrolünü yap", variable=self.check_links_var).grid(row=3, column=0, sticky=tk.W)
 
+        self.ai_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(options_frame, text="AI ile kategorize et (merkezi LLM gateway)", variable=self.ai_var).grid(row=4, column=0, sticky=tk.W)
+
         # Process button
         self.process_btn = ttk.Button(main_frame, text="Organize Et", command=self.start_processing)
         self.process_btn.grid(row=4, column=0, columnspan=3, pady=20)
@@ -166,9 +169,23 @@ class BookmarkOrganizerGUI:
 
             self.update_status("Linkler kategorilere ayrılıyor...")
 
-            organized_structure, unmatched = categorize_items(items, get_categories())
+            if self.ai_var.get():
+                from ai_categorizer import is_ai_available
+                from ai_pipeline import categorize_items_with_ai
+
+                if is_ai_available():
+                    self.log_result("AI kategorizasyonu: merkezi LLM gateway")
+                    organized_structure, unmatched_count = categorize_items_with_ai(items)
+                else:
+                    self.log_result("AI gateway erişilemedi — anahtar kelime kuralları kullanılıyor.")
+                    organized_structure, unmatched_items = categorize_items(items, get_categories())
+                    unmatched_count = len(unmatched_items)
+            else:
+                organized_structure, unmatched_items = categorize_items(items, get_categories())
+                unmatched_count = len(unmatched_items)
+
             self.update_progress(85)
-            self.log_result(f"Eşleşmeyen link: {len(unmatched)}")
+            self.log_result(f"Eşleşmeyen link: {unmatched_count}")
             
             # Create new HTML
             new_soup = BeautifulSoup("", 'html.parser')

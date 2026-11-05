@@ -50,12 +50,13 @@ CATEGORIES = {
             "Belgesel": ["belgesel", "documentary", "dokumental", "dokumenter"],
             "Müzik & Konserler": ["müzik", "konser", "concert", "spotify", "youtube.com/watch", "soundcloud"],
             "Müzeler & Galeriler": ["museum", "muze", "gallery", "sanat", "artsandculture.google", "louvre", "metmuseum", "britishmuseum"],
+            "Video Platformları": ["youtube.com", "vimeo.com", "dailymotion", "twitch.tv"],
         }
     },
     "Kültür & Yaşam": {
         "keywords": ["kültür", "kişisel gelişim", "felsefe", "tasavvuf", "kitap", "okuma", "blog", "dergi", "yaşam"],
         "sub": {
-            "Haber, Blog & Makale": ["feedly", "news", "gazete", "dunya.com", "hbrturkiye", "medium", "dev.to", "hackernoon", "uplifers", "resmigazete", "indieblog", "neocities", "lemmyverse", "thenewstack"],
+            "Haber, Blog & Makale": ["feedly", "news", "gazete", "reuters", "dunya.com", "hbrturkiye", "medium", "dev.to", "hackernoon", "uplifers", "resmigazete", "indieblog", "neocities", "lemmyverse", "thenewstack"],
             "Bilim & Akademi": ["evrimagaci", "scholar.google", "academia.edu", "bilim", "science", "acikders.ankara.edu.tr", "nationalacademies"],
             "Felsefe & Tasavvuf": ["felsefe", "tasavvuf", "anadoluaydinlanma", "isam", "tevhiddersleri", "stoacı", "sufi", "mevlana", "yunus emre", "risaleoku", "islamveihsan"],
             "Kitaplar & Kütüphaneler": {
@@ -95,3 +96,25 @@ def set_categories(categories_def: dict) -> None:
     """Aktif kategori yapılandırmasını değiştirir."""
     global CURRENT
     CURRENT = categories_def
+
+
+def list_category_paths(categories_def: dict = None) -> list:
+    """Tanımlı tüm kategori yollarını 'A > B' metinleri olarak döndürür.
+
+    AI istemlerine yalnızca üst düzey adlar yerine gerçek hiyerarşiyi vermek
+    için kullanılır.
+    """
+    if categories_def is None:
+        categories_def = get_categories()
+
+    paths: list = []
+
+    def walk(node: dict, prefix: list) -> None:
+        for name, value in node.items():
+            current = prefix + [name]
+            paths.append(" > ".join(current))
+            if isinstance(value, dict) and "sub" in value:
+                walk(value["sub"], current)
+
+    walk(categories_def, [])
+    return paths
