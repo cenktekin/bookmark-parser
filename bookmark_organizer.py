@@ -1,7 +1,6 @@
 """Yer imi (bookmark) kategorilendirme motoru ve komut satırı arayüzü."""
 
 import argparse
-import json
 import logging
 import os
 import shutil
@@ -10,15 +9,31 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from bs4 import BeautifulSoup, Doctype
 
-from categories import get_categories, set_categories
+from categories import get_categories
+from config_io import (
+    DEFAULT_INPUT,
+    DEFAULT_OUTPUT,
+    SCRIPT_DIR,
+    load_categories_config,
+    save_categories_config,
+)
+from html_writer import create_html_from_structure, generate_statistics
 from normalize import match_any_keyword
 
-logger = logging.getLogger(__name__)
+__all__ = [
+    "DEFAULT_INPUT",
+    "DEFAULT_OUTPUT",
+    "add_to_structure",
+    "categorize_items",
+    "categorize_link",
+    "create_html_from_structure",
+    "generate_statistics",
+    "load_categories_config",
+    "path_exists",
+    "save_categories_config",
+]
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_DIR, "categories_config.json")
-DEFAULT_INPUT = os.path.join(SCRIPT_DIR, "bookmarks.html")
-DEFAULT_OUTPUT = os.path.join(SCRIPT_DIR, "bookmarks_organized.html")
+logger = logging.getLogger(__name__)
 
 Item = Dict[str, str]
 Structure = Dict[str, Any]
@@ -145,118 +160,9 @@ def categorize_items(
     return structure, unmatched
 
 
-def generate_statistics(structure: Structure) -> Dict[str, int]:
-    """Kategori başına link sayıları üretir."""
-    stats: Dict[str, int] = {}
-
-    def count_items(level_dict: Dict[str, Any], path: str = "") -> int:
-        total = 0
-        for key, value in level_dict.items():
-            if key == "__items__":
-                count = len(value)
-                if path:
-                    stats[path] = count
-                total += count
-            else:
-                current_path = f"{path} > {key}" if path else key
-                total += count_items(value, current_path)
-        return total
-
-    total_count = count_items(structure)
-    stats["TOPLAM"] = total_count
-    return stats
-
-
 # --------------------------------------------------------------------------- #
-# Yapılandırma (config) yönetimi
+# Eşleşmeyen raporu
 # --------------------------------------------------------------------------- #
-
-def load_categories_config(filename: str) -> bool:
-    """Verilen JSON dosyasından kategori yapılandırmasını yükler.
-
-    Dosya bulunamazsa veya bozuksa dahili varsayılanlar kullanılmaya devam eder.
-    """
-    if not filename or not os.path.isfile(filename):
-        return False
-
-    try:
-        with open(filename, "r", encoding="utf-8") as fh:
-            loaded = json.load(fh)
-    except (json.JSONDecodeError, OSError) as exc:
-        logger.error("Yapılandırma okunamadı (%s): %s", filename, exc)
-        return False
-
-    if not isinstance(loaded, dict) or not loaded:
-        logger.error("Yapılandırma geçersiz (boş veya nesne değil): %s", filename)
-        return False
-
-    set_categories(loaded)
-    logger.info("Yapılandırma yüklendi: %s", filename)
-    return True
-
-
-def save_categories_config(filename: str, categories_def: Optional[Dict[str, Any]] = None) -> bool:
-    """Kategori yapılandırmasını JSON dosyasına yazar.
-
-    Yalnızca `--export-config` bayrağı ile çağrılır; hiçbir koşulda otomatik
-    olarak tetiklenmez (kullanıcının düzenlemeleri ezilmez).
-    """
-    data = categories_def if categories_def is not None else get_categories()
-    try:
-        with open(filename, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, ensure_ascii=False, indent=2)
-    except OSError as exc:
-        logger.error("Yapılandırma yazılamadı (%s): %s", filename, exc)
-        return False
-    logger.info("Yapılandırma kaydedildi: %s", filename)
-    return True
-
-
-# --------------------------------------------------------------------------- #
-# HTML üretimi
-# --------------------------------------------------------------------------- #
-
-def create_html_from_structure(structure: Structure, soup: BeautifulSoup) -> BeautifulSoup:
-    """Düzenlenmiş yer imi yapısından standart HTML üretir."""
-    def build_level(parent_dl: Any, level_dict: Dict[str, Any]) -> None:
-        sorted_keys = sorted(level_dict.keys(), key=lambda k: (k == "__items__", k.lower()))
-
-        for key in sorted_keys:
-            if key == "__items__":
-                continue
-
-            dt_folder = soup.new_tag('DT')
-            h3 = soup.new_tag('H3')
-            h3.string = key
-            dt_folder.append(h3)
-            parent_dl.append(soup.new_tag('p'))
-
-            sub_dl = soup.new_tag('DL')
-            p_sub = soup.new_tag('p')
-            sub_dl.append(p_sub)
-            parent_dl.append(sub_dl)
-
-            build_level(sub_dl, level_dict[key])
-
-        if "__items__" in level_dict:
-            for item in sorted(level_dict["__items__"], key=lambda x: x['title'].lower()):
-                if item['type'] == 'link':
-                    dt_link = soup.new_tag('DT')
-                    a = soup.new_tag('A', href=item['url'])
-                    if item.get('add_date'):
-                        a['add_date'] = item['add_date']
-                    if item.get('icon'):
-                        a['icon'] = item['icon']
-                    a.string = item['title']
-                    dt_link.append(a)
-                    parent_dl.append(dt_link)
-
-    top_dl = soup.new_tag('DL')
-    p_tag = soup.new_tag('p')
-    top_dl.append(p_tag)
-    build_level(top_dl, structure)
-    return top_dl
-
 
 def write_unmatched_report(unmatched: Sequence[Item], output_file: str) -> str:
     """Eşleşmeyen yer imlerini rapor dosyasına yazar."""

@@ -2,7 +2,7 @@
 
 import unittest
 
-from ai_cache import get_domain
+from ai_cache import CACHE_TTL_SECONDS, _is_expired, cache_key, get_domain, normalize_url
 from ai_prompts import build_batch_prompt, build_categorize_prompt, build_suggest_prompt
 from ai_response import FALLBACK_CATEGORY, parse_json_response, validate_result
 
@@ -65,6 +65,35 @@ class CacheKeyTests(unittest.TestCase):
 
     def test_domain_of_garbage_is_safe(self):
         self.assertEqual(get_domain(""), "")
+
+    def test_distinct_pages_of_same_domain_keep_distinct_keys(self):
+        a = cache_key("https://www.youtube.com/watch?v=aaa111")
+        b = cache_key("https://www.youtube.com/watch?v=bbb222")
+        self.assertNotEqual(a, b)
+
+    def test_tracking_params_and_fragment_are_stripped(self):
+        self.assertEqual(
+            normalize_url("https://WWW.Example.com/yol/?utm_source=x&id=7#bolum"),
+            "https://example.com/yol/?id=7",
+        )
+
+    def test_query_order_does_not_change_key(self):
+        self.assertEqual(
+            normalize_url("https://ornek.test/x?b=2&a=1"),
+            normalize_url("https://ornek.test/x?a=1&b=2"),
+        )
+
+
+class CacheTtlTests(unittest.TestCase):
+
+    def test_fresh_entry_is_valid(self):
+        self.assertFalse(_is_expired({"cached_at": 1_000.0}, now=1_000.0 + 10))
+
+    def test_expired_entry_is_detected(self):
+        self.assertTrue(_is_expired({"cached_at": 1_000.0}, now=1_000.0 + CACHE_TTL_SECONDS + 1))
+
+    def test_legacy_entry_without_timestamp_is_expired(self):
+        self.assertTrue(_is_expired({"category_path": ["A"], "confidence": 0.9}))
 
 
 class PipelinePathTests(unittest.TestCase):

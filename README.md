@@ -157,6 +157,24 @@ python ai_categorizer.py --check          # gateway erişimi + proje bilgisi
 GUI'de **"AI ile kategorize et (merkezi LLM gateway)"** onay kutusunu işaretlemek
 yeterlidir. Gateway erişilemezse otomatik olarak anahtar kelime kurallarına düşer.
 
+#### 🗂️ Önbellek
+
+AI önbelleği **URL bazlıdır** (`.ai_cache.json`, 30 gün TTL): aynı alan adındaki
+farklı sayfalar ayrı kayıt tutar; aynı sayfanın `utm_*`, `fbclid` gibi izleme
+parametreli varyantları ise tek kayda düşer.
+
+#### 💰 Maliyet ve Gecikme
+
+Ölçüm: 2026-11-19, merkezi LLM gateway, `--batch-size 10 --no-cache`.
+
+| Link sayısı | API çağrısı | Token (prompt + completion) | Süre |
+|---|---|---|---|
+| 8 (gerçek dosya, 05.11.2026) | 1 | 2.325 | 12 sn |
+| 120 (sentetik) | 22 (12 toplu + 10 tekil) | 55.709 (24.005 + 31.704) | 390 sn (6,5 dk) |
+
+120 linklik koşuda bir toplu istek boş yanıt döndüğü için o 10 link tekil
+çağrıya düştü; planlanan 12 toplu çağrı, gerçekte 22 çağrıya çıktı.
+
 ### ✅ Testler
 
 Proje harici test bağımlılığı kullanmaz; standart `unittest` yeterlidir:
@@ -322,6 +340,25 @@ python ai_categorizer.py --check          # gateway reachability + project info
 
 In the GUI just tick **"AI ile kategorize et (merkezi LLM gateway)"**. If the
 gateway is unreachable it falls back to the keyword rules automatically.
+
+#### 🗂️ Cache
+
+The AI cache is **URL-based** (`.ai_cache.json`, 30-day TTL): different pages on
+the same domain keep separate entries, while tracking-parameter variants of the
+same page (`utm_*`, `fbclid`, …) collapse into a single entry.
+
+#### 💰 Cost and Latency
+
+Measured on 2026-11-19 through the central LLM gateway with
+`--batch-size 10 --no-cache`.
+
+| Links | API calls | Tokens (prompt + completion) | Duration |
+|---|---|---|---|
+| 8 (real file, 2026-11-05) | 1 | 2,325 | 12 s |
+| 120 (synthetic) | 22 (12 batched + 10 single) | 55,709 (24,005 + 31,704) | 390 s (6.5 min) |
+
+In the 120-link run one batched request came back empty, so those 10 links fell
+back to individual calls — 12 planned batched calls became 22 actual calls.
 
 ### Tests
 

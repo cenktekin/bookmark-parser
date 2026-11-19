@@ -85,7 +85,7 @@ Model ve anahtar Karargah'tan secilir: http://127.0.0.1:9100
                         help="Batch size for API calls (default: 10)")
     parser.add_argument("--model", default=DEFAULT_MODEL,
                         help="(Kullanilmiyor) modeli merkez secer")
-    parser.add_argument("--no-cache", action="store_true", help="Disable domain caching")
+    parser.add_argument("--no-cache", action="store_true", help="Disable URL caching")
     parser.add_argument("--no-fallback", action="store_true",
                         help="Don't fall back to keyword categorization")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
@@ -153,7 +153,7 @@ def main(argv: List[str] = None) -> int:
         "total_categories": len(output),
         "token_usage": token_info,
         "model": args.model,
-        "cached_domains": cache_size(),
+        "cached_urls": cache_size(),
     }
 
     result_payload = {

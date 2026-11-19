@@ -2,7 +2,7 @@
 
 Sagladigi yetenekler:
 - Tekli ve toplu kategorizasyon
-- Alan adi bazli onbellek
+- URL bazli onbellek (TTL'li)
 - Anahtar kelime tabanli yedek kategori
 - Token/maliyet tahmini
 - Kutuphane ve CLI kullanimi
@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from ai_cache import get_cached as _get_cached
-from ai_cache import get_domain as _get_domain
+from ai_cache import normalize_url as _normalize_url
 from ai_cache import set_cache as _set_cache
 from ai_gateway import (
     DEFAULT_MODEL,
@@ -90,7 +90,7 @@ def categorize_with_ai(
         existing_categories: Tercih edilecek mevcut kategori adlari
         api_key: (Kullanilmiyor) anahtar merkezi yapilandirmadan gelir
         model_name: (Kullanilmiyor) modeli merkez secer
-        use_cache: Alan adi onbellegi kullanilsin mi
+        use_cache: URL onbellegi kullanilsin mi
         fallback_to_keyword: Hata durumunda anahtar kelime yedegine dusulsun mu
 
     Returns:
@@ -99,11 +99,11 @@ def categorize_with_ai(
     if use_cache:
         cached = _get_cached(url)
         if cached:
-            logger.debug("Cache hit for domain: %s", _get_domain(url))
+            logger.debug("Cache hit for URL: %s", _normalize_url(url))
             return CategorizeResult(
                 category_path=cached["category_path"],
                 confidence=cached["confidence"],
-                reasoning="From domain cache",
+                reasoning="From URL cache",
                 from_cache=True,
             )
 
@@ -165,7 +165,7 @@ def categorize_batch(
         batch_size: Istek basina yer imi sayisi
         api_key: (Kullanilmiyor) anahtar merkezi yapilandirmadan gelir
         model_name: (Kullanilmiyor) modeli merkez secer
-        use_cache: Alan adi onbellegi kullanilsin mi
+        use_cache: URL onbellegi kullanilsin mi
         fallback_to_keyword: Hata durumunda anahtar kelime yedegine dusulsun mu
 
     Returns:
@@ -182,7 +182,7 @@ def categorize_batch(
                 results.append(CategorizeResult(
                     category_path=cached["category_path"],
                     confidence=cached["confidence"],
-                    reasoning="From domain cache",
+                    reasoning="From URL cache",
                     from_cache=True,
                 ))
                 continue
